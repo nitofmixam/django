@@ -1,83 +1,44 @@
 from django.db import models
 
 
-class Category(models.Model):
-    name = models.CharField(
-        max_length=50,
-        verbose_name="Наименование категории",
-        help_text="Введите наименование категории",
-    )
-    description = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name="Описание категории",
-        help_text="Введите описание категории",
-    )
-
-    class Meta:
-        verbose_name = "Категория"
-        verbose_name_plural = "Категории"
-        ordering = ["name"]
-
-    def __str__(self):
-        return self.name
-
-
 class Product(models.Model):
-    name = models.CharField(
-        max_length=50,
-        verbose_name="Наименование продукта",
-        help_text="Введите наименование продукта",
-    )
-    description = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name="Описание продукта",
-        help_text="Введите описание продукта",
-    )
-    preview = models.ImageField(
-        upload_to="catalog/preview",
-        blank=True,
-        null=True,
-        verbose_name="Изображение продукта",
-        help_text="Загрузите изображение продукта",
+    name = models.CharField(max_length=100, verbose_name="Наименование")
+    description = models.TextField(verbose_name="Описание")
+    image = models.ImageField(
+        upload_to="products/images", verbose_name="Изображение (превью)", blank=True, null=True
     )
     category = models.ForeignKey(
-        Category,
-        on_delete=models.SET_NULL,
-        verbose_name="Категория продукта",
-        help_text="Введите категорию продукта",
-        blank=True,
-        null=True,
+        "Category",
+        on_delete=models.CASCADE,
+        verbose_name="Категория",
         related_name="products",
     )
-    price_per_purchase = models.PositiveIntegerField(
-        verbose_name="Цена за покупку", help_text="Введите цену",
+    price = models.DecimalField(
+        max_digits=10, decimal_places=2, verbose_name="Цена за покупку"
     )
-    created_at = models.DateTimeField(
-        blank=True,
-        null=True,
-        verbose_name="Дата создания продукта (записи в БД)",
-        help_text="Введите дату создания продукта (записи в БД)",
-    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(
-        blank=True,
-        null=True,
-        verbose_name="Дата последнего изменения продукта (записи в БД)",
-        help_text="Введите дату последнего изменения продукта (записи в БД)",
+        auto_now=True, verbose_name="Дата последнего изменения"
     )
 
-    # manufactured_at = models.DateField(
-    #     blank=True,
-    #     null=True,
-    #     verbose_name="Дата производства продукта",
-    #     help_text="Введите дату производства продукта",
-    # )
+    # manufactured_at = models.DateTimeField(auto_now=True, verbose_name="Дата производства продукта")
+
+    def __str__(self):
+        return f"{self.name}, {self.description}, {self.price}"
 
     class Meta:
         verbose_name = "Продукт"
         verbose_name_plural = "Продукты"
-        ordering = ["name"]
+        ordering = ["name", "price"]
+
+
+class Category(models.Model):
+    name = models.CharField(max_length=100, verbose_name="Наименование")
+    description = models.TextField(verbose_name="Описание")
 
     def __str__(self):
-        return self.name
+        return f"{self.name}, {self.description}"
+
+    class Meta:
+        verbose_name = "Категория"
+        verbose_name_plural = "Категории"

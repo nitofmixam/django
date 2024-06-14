@@ -1,30 +1,24 @@
-from django.shortcuts import render
-from catalog.models import Product
+from django.shortcuts import render, get_object_or_404
+from django.views.generic import ListView, DetailView, TemplateView
+from catalog.models import Category, Product
 
 
-# def home(request):
-#     return render(request, 'home.html')
+class ContactsTemplateView(TemplateView):
+    template_name = 'catalog/contacts.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Контакты'
+        return context
 
 
-def contact(request):
-    if request.method == 'POST':
-        # в переменной request хранится информация о методе, который отправлял пользователь
-        name = request.POST.get('name')
-        phone = request.POST.get('phone')
-        message = request.POST.get('message')
-        print(name)
-        print(phone)
-        print(message)
-    return render(request, "contacts.html")
+class CategoryListView(ListView):
+    model = Category
 
 
-def product_list(request):
-    products = Product.objects.all()
-    context = {'products': products}
-    return render(request, "product_list.html", context)
+class CategoryDetailView(DetailView):
+    model = Category
 
 
-def product_detail(request, pk):
-    product = Product.objects.get(pk=pk)
-    context = {'product': product}
-    return render(request, "product_detail.html", context)
+class ProductDetailView(DetailView):
+    model = Product
