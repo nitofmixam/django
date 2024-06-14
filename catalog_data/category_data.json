@@ -1,0 +1,26 @@
+[
+  {
+    "model": "catalog.category",
+    "pk": 1,
+    "fields": {
+      "name": "Бытовая техника",
+      "description": "Техника для кухни и уборки"
+    }
+  },
+  {
+    "model": "catalog.category",
+    "pk": 2,
+    "fields": {
+      "name": "Компьютеры",
+      "description": "Системные блоки, ноутбуки, комплектующие для компьютеров"
+    }
+  },
+  {
+    "model": "catalog.category",
+    "pk": 3,
+    "fields": {
+      "name": "Мобильные телефоны",
+      "description": "Смартфоны и сотовые телефоны"
+    }
+  }
+]
