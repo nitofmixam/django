@@ -1,31 +1,21 @@
-from django.shortcuts import render, get_object_or_404
+from django.urls import reverse_lazy, reverse
+from django.views.generic import ListView, DetailView, TemplateView, CreateView, UpdateView, DeleteView
 from catalog.models import Product
 
 
-# def home_page(request):
-#     return render(request, 'catalog/home_page.html')
+class ProductListView(ListView):
+    model = Product
 
 
-def contacts(request):
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        phone = request.POST.get('phone')
-        message = request.POST.get('message')
-        print(name, phone, message)
-    return render(request, 'catalog/contacts.html')
+class ContactsTemplateView(TemplateView):
+    template_name = "catalog/contacts.html"
 
 
-def products_list(request):
-    products = Product.objects.all()
-    context = {
-        'object_list': products
-    }
-    return render(request, 'catalog/products_list.html', context)
+class ProductDetailView(DetailView):
+    model = Product
 
-
-def product_detail(request, pk):
-    product = get_object_or_404(Product, pk=pk)
-    context = {
-        'object': product
-    }
-    return render(request, 'catalog/product_detail.html', context)
+    def get_object(self, queryset=None):
+        self.object = super().get_object(queryset)
+        self.object.view_counter += 1
+        self.object.save()
+        return self.object
