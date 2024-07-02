@@ -22,3 +22,4 @@ wcwidth==0.2.13
 
 articles~=0.1.0
 django-email-users~=2.0.0
+pytils~=0.4.1
