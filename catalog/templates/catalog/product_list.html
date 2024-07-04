@@ -3,17 +3,28 @@
 {% block content %}
 <div class="container">
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+        <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+            <h2 class="display-2">Продукты</h2>
+             {% if user.is_active %}
+            <p class="lead"></p>
+            <a class="btn btn-secondary my-2" href="{% url 'catalog:product_create' %}">Создать новый продукт</a>
+            {% endif %}
+        </div>
         {% for prod in object_list %}
-        <div class="col">
+        <div class="col-4">
             <div class="card shadow-sm">
                 <img src="{{ prod.image_preview|media_filter }}">
                 <div class="card-body">
                     <p class="card-text">{{prod.product_name}}</p>
                     <p class="card-text">Описание: {{ prod.description | slice:100 }}</p>
+                    <li>{{ prod.version_number }}</li>
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="btn-group">
                             <a class="btn btn-primary" href="{% url 'catalog:product_detail' prod.pk %}" role="button">Посмотреть</a>
-
+                            {% if user.is_active %}
+                            <a class="btn btn-warning" href="{% url 'catalog:product_update' prod.pk %}" role="button">Редактировать</a>
+                            <a class="btn btn-danger" href="{% url 'catalog:product_delete' prod.pk %}" role="button">Удалить</a>
+                             {% endif %}
                         </div>
                     </div>
                 </div>

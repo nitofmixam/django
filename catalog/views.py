@@ -1,89 +1,59 @@
-from django.shortcuts import render
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.forms import inlineformset_factory
 from django.urls import reverse_lazy, reverse
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, TemplateView, CreateView, UpdateView, DeleteView
 
-from catalog.models import Category, Product
+from catalog.models import Product
 
 
-class ProductsCreateView(CreateView):
-    """
-    класс контроллер приложения каталог
-    шаблон форма добавить продукт
-    """
+class ProductListView(ListView):
     model = Product
-    fields = ('product_name', 'product_description', 'product_image', 'product_category', 'product_price')
-    success_url = reverse_lazy('catalog:list')
 
 
-class ProductsListView(ListView):
-    """
-    Класс контроллер приложения каталог
-    шаблон продукты
-    """
+class ContactsTemplateView(TemplateView):
+    template_name = "catalog/contacts.html"
+
+
+class ProductDetailView(DetailView):
     model = Product
-    template_name = 'catalog/products_list.html'
+
+    def form_valid(self, form):
+        formset = self.get_context_data()['formset']
+        self.object = form.save()
+        if formset.is_valid():
+            formset.instance = self.object
+            formset.save()
+        return super().form_valid(form)
 
 
-class ProductsDetailView(DetailView):
-    """
-    Класс контроллер приложения каталог
-    шаблон продукта
-    """
+class ProductCreateView(CreateView, LoginRequiredMixin):
     model = Product
-    template_name = 'catalog/products_detail.html'
+    success_url = reverse_lazy('catalog:product_catalog')
+
+    def form_valid(self, form):
+        self.object = form.save()
+        self.object.owner = self.request.user
+        self.object.save()
+        form.instance.user = self.request.user
+        return super().form_valid(form)
 
 
-class ProductsUpdateView(UpdateView):
-    """
-    класс контроллер приложения каталог
-    шаблон форма изменить продукт
-    """
+class ProductUpdateView(UpdateView, LoginRequiredMixin):
     model = Product
-    fields = ('product_name', 'product_description', 'product_image', 'product_category', 'product_price')
-    success_url = reverse_lazy('catalog:list')
+    success_url = reverse_lazy('catalog:product_catalog')
 
     def get_success_url(self):
-        return reverse('products:detail', args=[self.kwargs.get('pk')])
+        return reverse('catalog:product_detail', kwargs={'pk': self.object.pk})
+
+    def form_valid(self, form):
+        formset = self.get_context_data()['formset']
+        self.object = form.save()
+        if formset.is_valid():
+            formset.instance = self.object
+            formset.save()
+        return super().form_valid(form)
 
 
-class ProductsDeleteView(DeleteView):
-    """
-    класс контроллер приложения каталог
-    шаблон форма удалить продукт
-    """
+class ProductDeleteView(DeleteView):
     model = Product
-    success_url = reverse_lazy('catalog:list')
-
-
-def home(request):
-    """
-    Функция контроллер шаблона
-    домашней страницы приложения каталог
-    :param request: data
-    :return: dict
-    """
-    category = Category.objects.all()
-    context = {
-        'object_list': category,
-        'title': 'Главная'
-    }
-    return render(request, 'catalog/base.html', context)
-
-
-def contacts(request):
-    """
-    Функция контроллер шаблона
-    страницы контакты приложения каталог
-    :param request: data
-    :return: dict
-    """
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        email = request.POST.get('email')
-        message = request.POST.get('message')
-        print(f'You have new message from {name}({email}): {message}')
-
-    context = {
-        'title': 'Обратная связь'
-    }
-    return render(request, 'catalog/contacts.html', context=context)
+    success_url = reverse_lazy('catalog:product_catalog')
