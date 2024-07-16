@@ -1,4 +1,5 @@
 {% extends 'catalog/home_page.html' %}
+
 {% block content %}
 <div class="container">
     <div class="row">
@@ -8,9 +9,9 @@
                   <form method="post">
                       {% csrf_token %}
                       {{ form.as_p }}
-                      <p>Вы хотите удалить Продукт "{{ object.title }}?"</p>
+                      <p>Вы хотите удалить Продукт "{{ object.name }}?"</p>
                       <button type="submit" class="btn btn-primary">Подтвердить</button>
-                      <a href="{% url 'blog:list' %}" class="btn btn-success">Отменить</a>
+                      <a href="{% url 'catalog:products_list' %}" class="btn btn-success">Отменить</a>
                   </form>
               </div>
             </div>
