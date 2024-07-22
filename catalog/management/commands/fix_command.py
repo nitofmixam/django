@@ -1,70 +1,54 @@
 import json
 from django.core.management import BaseCommand
-from django.db import connection
-
-from catalog.models import Category, Product
+from catalog.models import Product, Category
 
 
 class Command(BaseCommand):
 
     @staticmethod
     def json_read_categories():
-        """ Метод распаковки json-файла и сохранения в новый список для дальнейшей работы"""
-        categories_list = []
-        with open('catalog/fixtures/category.json', 'r', encoding="utf-8") as f:
-            file = json.load(f)
-
-            for item in file:
-                categories_list.append(item)
-        return categories_list
+        # Здесь мы получаем данные из фикстурв с категориями
+        with open('category.json', encoding='utf-8') as file:
+            return json.load(file)
 
     @staticmethod
     def json_read_products():
-        """ Метод распаковки json-файла и сохранения в новый список для дальнейшей работы"""
-        products_list = []
-        with open('catalog/fixtures/products.json', 'r', encoding="utf-8") as f:
-            file = json.load(f)
-
-            for item in file:
-                products_list.append(item)
-        return products_list
+        # Здесь мы получаем данные из фикстурв с продуктами
+        with open('product.json', encoding='utf-8') as file:
+            return json.load(file)
 
     def handle(self, *args, **options):
 
-        with connection.cursor() as cursor:
-            cursor.execute(f"TRUNCATE TABLE catalog_category RESTART IDENTITY CASCADE;")
-            cursor.execute(f"TRUNCATE TABLE catalog_product RESTART IDENTITY CASCADE;")
-
+        # Удалите все продукты
         Product.objects.all().delete()
+        # Удалите все категории
         Category.objects.all().delete()
+        # Создайте списки для хранения объектов
+        product_for_create = []
+        category_for_create = []
 
-        products_for_create = []
-        categories_for_create = []
-
-        for category_item in Command.json_read_categories():
-            categories_for_create.append(
-                Category(id=category_item['pk'],
-                         name=category_item['fields']['name'],
-                         description=category_item['fields']['description'],
-                         )
+        # Обходим все значения категорий из фиктсуры для получения информации об одном объекте
+        for category in Command.json_read_categories():
+            category_for_create.append(
+                Category(id=category['pk'],
+                         name=category['fields']['name'],
+                         description=category['fields']['description'])
             )
 
-        Category.objects.bulk_create(categories_for_create)
+            # Создаем объекты в базе с помощью метода bulk_create()
+        Category.objects.bulk_create(category_for_create)
 
-        for product_item in Command.json_read_products():
-            products_for_create.append(
-                Product(id=product_item['pk'],
-                        name=product_item['fields']['name'],
-                        description=product_item['fields']['description'],
-                        price=product_item['fields']['price'],
-                        category=Category.objects.get(id=product_item['fields']['category']),
-                        image=product_item['fields']['image'],
-                        created_at=product_item['fields']['created_at'],
-                        updated_at=product_item['fields']['updated_at'],
-                        )
+        # Обходим все значения продуктов из фиктсуры для получения информации об одном объекте
+        for product in Command.json_read_products():
+            product_for_create.append(
+                Product(id=product['pk'], name=product['fields']['name'],
+                        description=product['fields']['description'],
+                        price=product['fields']['price'],
+                        category=Category.objects.get(pk=product['fields']['category']),
+                        image=product['fields']['image'],
+                        created_at=product['fields']['created_at'],
+                        updated_at=product['fields']['updated_at'])
             )
 
-        Product.objects.bulk_create(products_for_create)
-
-        # Дополнительное задание 1
-        print(Product.objects.all().order_by('-created_at')[:2])
+            # Создаем объекты в базе с помощью метода bulk_create()
+        Product.objects.bulk_create(product_for_create)

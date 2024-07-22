@@ -1,0 +1,158 @@
+[
+  {
+    "model": "catalog.category",
+    "pk": 1,
+    "fields": {
+      "name": "Мебель",
+      "description": "Большая и деревянная"
+    }
+  },
+  {
+    "model": "catalog.category",
+    "pk": 2,
+    "fields": {
+      "name": "Кухня",
+      "description": "Товары для кухни"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 1,
+    "fields": {
+      "name": "Шкаф",
+      "description": "Деревянный шкаф из темного дуба",
+      "image": "product/photo/black-wardrobes-for-popular-pax-wardrobe-black-brown-undredal-black-200x60_Jhzb2II.jpg",
+      "category": 1,
+      "price": 10000,
+      "created_at": "2024-06-14",
+      "updated_at": "2024-07-16",
+      "owner": 29,
+      "publication": false
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 2,
+    "fields": {
+      "name": "Кровать",
+      "description": "Двухспальная кровать с мягким матрасом ...",
+      "image": "product/photo/paQOECGnuRc.jpg",
+      "category": 1,
+      "price": 20000,
+      "created_at": "2024-06-14",
+      "updated_at": "2024-07-16",
+      "owner": null,
+      "publication": false
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 3,
+    "fields": {
+      "name": "Тумбочка",
+      "description": "Прикроватная тумбочка с 2 выдвижными ящиками",
+      "image": "product/photo/item_941.jpg",
+      "category": 1,
+      "price": 5000,
+      "created_at": "2024-06-14",
+      "updated_at": "2024-07-16",
+      "owner": null,
+      "publication": false
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 4,
+    "fields": {
+      "name": "Плитка",
+      "description": "Напольная плитка для кухни",
+      "image": "product/photo/ELEMENTY_PLITKI_GLOBAL_TILE__40X40_SVETLOKORICHNEVAYA_N000354129_1.webp",
+      "category": 2,
+      "price": 2000,
+      "created_at": "2024-06-14",
+      "updated_at": "2024-07-16",
+      "owner": null,
+      "publication": false
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 5,
+    "fields": {
+      "name": "Кухонный шкаф",
+      "description": "Кухонный шкаф для посуды",
+      "image": "product/photo/2445.jpg",
+      "category": 2,
+      "price": 12000,
+      "created_at": "2024-06-14",
+      "updated_at": "2024-07-16",
+      "owner": null,
+      "publication": false
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 6,
+    "fields": {
+      "name": "Диван",
+      "description": "Раскладной диван для всей семьи",
+      "image": "product/photo/без_названия6.jpg",
+      "category": 1,
+      "price": 15000,
+      "created_at": "2024-06-14",
+      "updated_at": "2024-07-16",
+      "owner": null,
+      "publication": false
+    }
+  },
+  {
+    "model": "catalog.version",
+    "pk": 1,
+    "fields": {
+      "product": 5,
+      "version_number": 11,
+      "version_name": "Усиленные петли",
+      "is_active": false
+    }
+  },
+  {
+    "model": "catalog.version",
+    "pk": 2,
+    "fields": {
+      "product": 2,
+      "version_number": 3,
+      "version_name": "Ортапедический матрас",
+      "is_active": true
+    }
+  },
+  {
+    "model": "catalog.version",
+    "pk": 3,
+    "fields": {
+      "product": 3,
+      "version_number": 1,
+      "version_name": "Противоскользящее покрытие",
+      "is_active": false
+    }
+  },
+  {
+    "model": "catalog.version",
+    "pk": 4,
+    "fields": {
+      "product": 6,
+      "version_number": 1,
+      "version_name": "белый",
+      "is_active": true
+    }
+  },
+  {
+    "model": "catalog.version",
+    "pk": 5,
+    "fields": {
+      "product": 5,
+      "version_number": 12,
+      "version_name": "закаленное стекло",
+      "is_active": true
+    }
+  }
+]

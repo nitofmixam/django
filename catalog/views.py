@@ -1,156 +1,80 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.forms import inlineformset_factory
-from django.urls import reverse_lazy, reverse
-from django.views.generic import TemplateView, ListView, DetailView, CreateView, UpdateView, DeleteView
-
-from catalog.forms import ProductForm, VersionForm
+from django.shortcuts import render
+from django.urls import reverse_lazy
+from django.views.generic import ListView, DetailView, TemplateView, CreateView, UpdateView, DeleteView
+from catalog.forms import ProductForm, VersionForm, ProductModeratorForm
 from catalog.models import Product, Version
 
 
-# замена контроллера FBV на CBV
-#  Новый контроллер CBV
-class ContactsTemplateView(TemplateView):
-    template_name = 'catalog/contacts.html'
-
-    def post(self, request, *args, **kwargs):
-        name = request.POST.get('name')
-        phone = request.POST.get('phone')
-        message = request.POST.get('message')
-        print(name, phone, message)
-        return super().get(request, *args, **kwargs)
-
-
-#  Старый контроллер FBV
-# def contacts(request):
-#     if request.method == 'POST':
-#         # в переменной request хранится информация о методе, который отправлял пользователь
-#         name = request.POST.get('name')
-#         phone = request.POST.get('phone')
-#         message = request.POST.get('message')
-#         # а также передается информация, которую заполнил пользователь
-#         print(name, phone, message)
-#     return render(request, 'catalog/contacts.html')
-
-
-#  Новый контроллер CBV
 class ProductListView(ListView):
-    """Класс для вывода страницы со всеми продуктами"""
     model = Product
 
     def get_context_data(self, *args, **kwargs):
-        """Метод для получения версий Продукта и вывода только активной версии"""
         context = super().get_context_data(*args, **kwargs)
-        products = self.get_queryset()
-        for product in products:
-            product.version = product.versions.filter(is_current=True).first()
-
-        # Данная строчка нужна, чтобы в contex добавились новые данные о Продуктах
-        context["object_list"] = products
-
+        for product in context['object_list']:
+            versions = Version.objects.filter(product=product)
+            active_versions = versions.filter(is_active=True)
+            if active_versions:
+                product.active_version = active_versions.last().version_name
+            else:
+                product.active_version = 'Нет активной версии'
         return context
 
 
 class ProductDetailView(DetailView):
-    """Класс для вывода страницы с одним продуктом по pk"""
     model = Product
 
-    def get_object(self, queryset=None):
-        """Метод для настройки работы счетчика просмотра продукта"""
-        self.object = super().get_object(queryset)
-        self.object.view_counter += 1
-        self.object.save()
-        return self.object
+
+class ContactsView(TemplateView):
+    template_name = "catalog/contacts.html"
 
 
-class ProductCreateView(CreateView):
+class ProductCreateView(LoginRequiredMixin, CreateView):
     model = Product
-    # Добавляем формы. Заменяем fields на form_class
-    # fields = ('name', 'description', 'preview', 'category', 'price')
     form_class = ProductForm
-    success_url = reverse_lazy('catalog:products_list')
+    success_url = reverse_lazy('catalog:product_list')
+
+    def form_valid(self, form):
+        product = form.save()
+        user = self.request.user  # получаю авторизованного пользователя
+        product.owner = user
+        product.save()
+        return super().form_valid(form)
+
+
+class ProductUpdateView(LoginRequiredMixin, UpdateView):
+    model = Product
+    form_class = ProductForm
+    success_url = reverse_lazy('catalog:product_list')
 
     def get_context_data(self, **kwargs):
-        """Метод для создания Формсета и настройки его работы"""
         context_data = super().get_context_data(**kwargs)
-
-        # Создаем ФОРМСЕТ
-        # В агрументах прописывается только форма для модели Версия,
-        # так как в этом классе form_class = ProductForm уже был указан выше
-        # Количество экземпляров, выводимое на страницу
-        # instance говорит о том, откуда мы получаем информацию, нужен только для редактирования объекта,
-        # для создания не обязателен,
-        # extra=1 - означает, что будет выводиться только новая форма для заполнения
-        VersionFormset = inlineformset_factory(Product, Version, form=VersionForm, extra=1)
-
+        ProductFormset = inlineformset_factory(Product, Version, VersionForm,
+                                               extra=1)  # основная модель, дополнителная модель, модель из форм, количество форм
         if self.request.method == 'POST':
-            context_data['formset'] = VersionFormset(self.request.POST)
-
+            context_data['formset'] = ProductFormset(self.request.POST, instance=self.object)
         else:
-            context_data['formset'] = VersionFormset()
-
+            context_data['formset'] = ProductFormset(instance=self.object)
         return context_data
 
     def form_valid(self, form):
-        """Метод для проверки валидации формы и формсета"""
         context_data = self.get_context_data()
         formset = context_data['formset']
-        # Задаем условие, при котором д.б. валидными и форма и формсет
-        if form.is_valid() and formset.is_valid():
+        if formset.is_valid() and form.is_valid():
             self.object = form.save()
             formset.instance = self.object
-            # save() данная функция сохраняет внесенные изменения
             formset.save()
             return super().form_valid(form)
-
         else:
             return self.render_to_response(self.get_context_data(form=form, formset=formset))
 
-
-class ProductUpdateView(UpdateView):
-    model = Product
-    # Добавляем формы. Заменяем fields на form_class
-    # fields = ('name', 'description', 'preview', 'category', 'price')
-    form_class = ProductForm
-
-    def get_success_url(self):
-        """ Метод для определения пути, куда будет совершен переход после редактирования продкута"""
-        return reverse('catalog:product_detail', args=[self.get_object().pk])
-        # ранее было args=[self.kwargs.get('pk')]
-
-    def get_context_data(self, **kwargs):
-        """Метод для создания Формсета и настройки его работы"""
-        context_data = super().get_context_data(**kwargs)
-        # В агрументах прописывается только форма для модели Версия,
-        # так как в этом классе form_class = ProductForm уже был указан выше
-        # Количество экземпляров, выводимое на страницу
-        # instance говорит о том, откуда мы получаем информацию, нужен только для редактирования объекта,
-        # для создания не обязателен,
-        # extra=1 - означает, что будет выводиться только новая форма для заполнения
-        VersionFormset = inlineformset_factory(Product, Version, form=VersionForm, extra=1)
-
-        if self.request.method == 'POST':
-            context_data['formset'] = VersionFormset(self.request.POST, instance=self.object)
-
-        else:
-            context_data['formset'] = VersionFormset(instance=self.object)
-
-        return context_data
-
-    def form_valid(self, form):
-        """Метод для проверки валидации формы и формсета"""
-        context_data = self.get_context_data()
-        formset = context_data['formset']
-        # Задаем условие, при котором д.б. валидными и форма и формсет
-        if form.is_valid() and formset.is_valid():
-            self.object = form.save()
-            formset.instance = self.object
-            # save() данная функция сохраняет внесенные изменения
-            formset.save()
-            return super().form_valid(form)
-
-        else:
-            return self.render_to_response(self.get_context_data(form=form, formset=formset))
-
-
-class ProductDeleteView(DeleteView):
-    model = Product
-    success_url = reverse_lazy('catalog:products_list')
+    def get_form_class(self):
+        user = self.request.user  # получаем юзера
+        if user == self.object.owner:  # если юзер является хозяином магазина
+            return ProductForm  # возвращаем обычную форму
+        if user.has_perm('catalog.can_canceled_public') and user.has_perm(
+                'catalog.can_edit_category') and user.has_perm('catalog.can_edit_desk'):  # если имеет эти права
+            return ProductModeratorForm  # возвращаем форму для модераторов
+        raise PermissionDenied  # выдает ошибку 403

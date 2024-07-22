@@ -1,0 +1,80 @@
+[
+  {
+    "model": "catalog.product",
+    "pk": 1,
+    "fields": {
+      "name": "Шкаф",
+      "description": "Большой шкаф из темного дуба",
+      "image": "",
+      "category": 1,
+      "price": 10000,
+      "created_at": "2024-06-06",
+      "updated_at": "2024-06-06"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 2,
+    "fields": {
+      "name": "стол",
+      "description": "Журнальный столик ручной работы",
+      "image": "",
+      "category": 1,
+      "price": 7000,
+      "created_at": "2024-06-06",
+      "updated_at": "2024-06-06"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 3,
+    "fields": {
+      "name": "samsung",
+      "description": "36/4 GB",
+      "image": "",
+      "category": 2,
+      "price": 12000,
+      "created_at": "2024-06-06",
+      "updated_at": "2024-06-06"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 4,
+    "fields": {
+      "name": "iphone",
+      "description": "564 GB",
+      "image": "",
+      "category": 2,
+      "price": 150000,
+      "created_at": "2024-06-06",
+      "updated_at": "2024-06-06"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 5,
+    "fields": {
+      "name": "Трубы",
+      "description": "Трубы для питьевой воды 50 метров",
+      "image": "",
+      "category": 3,
+      "price": 1000,
+      "created_at": "2024-06-06",
+      "updated_at": "2024-06-06"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 6,
+    "fields": {
+      "name": "Плитка",
+      "description": "Плитка керамическая для ванны",
+      "image": "",
+      "category": 3,
+      "price": 300,
+      "created_at": "2024-06-06",
+      "updated_at": "2024-06-06"
+    }
+  }
+]

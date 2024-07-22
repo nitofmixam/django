@@ -1,37 +1,39 @@
-{% extends 'catalog/home_page.html' %}
-{% load media_tags %}
+{% extends 'catalog/base.html' %}
+{% load my_tags %}
 {% block content %}
-<div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
-    <h1 class="display-6">Магазинчик</h1>
-    <p class="lead">Прекраные продукты, рядом с домом</p>
-    <a class="btn btn btn-outline-primary mt-4" href="{% url 'catalog:create' %}" role="button">Добавить Продукт</a>
+
+{% if user.is_authenticated %}
+<div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow">
+    <nav class="ms-5">
+        <a class="p-2 btn btn-outline-primary" href="{% url 'catalog:product_create' %}">Создать продукт</a>
+    </nav>
 </div>
+{% endif %}
 
 <div class="container">
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
-        {% for product in object_list %}
-        <div class="col">
-            <div class="card shadow-sm">
-                <!--            <img src="/media/{{ product.preview }}" alt="Product Image" class="Image fluid">-->
-                <img src="{{ product.preview|media_filter }}" alt="Product Image" class="Image fluid">
+    <div class="row text-center">
+{% for product in object_list %}
+        <div class="col-3">
+            <div class="card mb-4 box-shadow">
+                <div class="card-header">
+                    <h4 class="my-0 font-weight-normal">{{product.name}}</h4>
+                </div>
+                <img src="{{ product.image | media_filter }}">
                 <div class="card-body">
-                    <h4 class="card-text">{{ product }}</h4>
-                    <p class="card-text">Цена: {{ product.price }} руб</p>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-sm btn-outline-secondary"><a
-                                    href="{% url 'catalog:product_detail' product.pk %}" class="text-black">На продукт</a></button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary"><a
-                                    href="{% url 'catalog:update' product.pk %}" class="text-black">Редактировать</a></button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary"><a
-                                    href="{% url 'catalog:delete' product.pk %}" class="text-black">Удалить</a></button>
-                        </div>
-                        <small class="text-body-secondary">Версия: {{ product.version.name }} {{ product.version.number | floatformat }}</small>
-                    </div>
+                    <h1 class="card-title pricing-card-title">{{product.price}} p.</h1>
+                    <ul class="list-unstyled mt-3 mb-4 text-start m-3">
+                        <li>{{ product.description | truncatechars }}</li>
+                    </ul>
+                    <p>Активная версия: {{ product.active_version }}</p>
+
+                    <a class="btn btn-primary" href="{% url 'catalog:product_detail' product.pk %}" role="button">Просмотр</a>
+                    {% if perms.catalog.can_canceled_public and perms.catalog.can_edit_category and perms.catalog.can_edit_desk or user == product.owner %}
+                    <a class="btn btn-primary" href="{% url 'catalog:product_update' product.pk %}" role="button">Редактировать</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
-        {% endfor %}
+{% endfor %}
     </div>
-</div>
+ </div>
 {% endblock %}

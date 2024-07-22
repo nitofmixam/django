@@ -38,8 +38,7 @@ INSTALLED_APPS = [
 
     'catalog',
     'blog',
-    'user',
-    "phonenumber_field",
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -78,7 +77,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'django',
+        'NAME': 'django2',
         'USER': 'postgres',
         'PASSWORD': '190573',
         'HOST': '127.0.0.1',
@@ -130,26 +129,18 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Добавляем настройки для работы Приложения User
-AUTH_USER_MODEL = "user.User"
+AUTH_USER_MODEL = 'users.User'
 
-# Данная настройка требуется для работы кастомной команды create_superuser, чтобы при переходе на страницу
-# был переход к форме Входа
-LOGIN_REDIRECT_URL = "/"
-# Для Выхода, переадресует на Главную страницу
-LOGOUT_REDIRECT_URL = "/"
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
 
-# Настройки для отправки писем на почту сервиса Яндекс
-EMAIL_HOST = "smtp.yandex.ru"
+
+EMAIL_HOST = 'smtp.yandex.ru'
 EMAIL_PORT = 465
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
-# Пишем нашу почту, ту почту с которой будет отправляться письмо
-# Получаем пароль для приложения следуя шагам на сайте https://yandex.ru/support/id/authorization/app-passwords.html
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-# Пишем пароль для Приложения Яндекс, а не пароль входа на Почту
+EMAIL_HOST_USER = "tests.python100@yandex.ru"
+EMAIL_HOST_PASSWORD = "dyqyrkzpkwhcgyrq"
 EMAIL_USE_TLS = False
 EMAIL_USE_SSL = True
 
-# Дополнительные настройки для всех почтовых сервисов
 SERVER_EMAIL = EMAIL_HOST_USER
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
