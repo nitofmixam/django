@@ -27,7 +27,7 @@ class UserCreateView(CreateView):
         url = f'http://{host}/users/email-confirm/{token}/'
         send_mail(subject="Подтверждение почты",
                   message=f"Перейдите по ссылке для подтверждения почты {url}",
-                  from_email='tatyanakharlamova27@yandex.ru',
+                  from_email='maks-fotin@mail.ru',
                   recipient_list=[user.email]
                   )
         return super().form_valid(form)
