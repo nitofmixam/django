@@ -1,27 +1,21 @@
-from django.contrib.auth.forms import UserCreationForm
-from django.forms import BooleanField
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django import forms
+
+from catalog.forms import StyleFormMixin
 from users.models import User
 
 
-class StyleFormMixin:
-    """
-     Форма для стализации
-    """
+class UserRegisterForm(StyleFormMixin, UserCreationForm):
+    class Meta:
+        model = User
+        fields = ('email', 'password1', 'password2')
+
+
+class UserProfileForm(StyleFormMixin, UserChangeForm):
+    class Meta:
+        model = User
+        fields = ('email', 'phone','country', 'avatar')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for fild_name, fild in self.fields.items():
-            if isinstance(fild, BooleanField):
-                fild.widget.attrs['class'] = 'form-check-input'
-            else:
-                fild.widget.attrs['class'] = 'form-control'
-
-
-class UserRegisterForm(StyleFormMixin, UserCreationForm):
-    """
-    Форма для регистрации пользователей с включенными полями email и пароля.
-    """
-
-    class Meta:
-        model = User
-        fields = ['email', 'password1', 'password2']
+        self.fields['password'].widget = forms.HiddenInput()
