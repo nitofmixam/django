@@ -1,12 +1,30 @@
 {% extends 'catalog/base.html' %}
-{% block content %}
-<div class="pricing-header px-3 py-3 pb-md-4 mx-auto text-center">
-    <p class="lead">Описание продукта</p>
-</div>
 
-<div class="container">
-    <div class="row text-center">
-        {% include 'catalog/includes/inc_prod.html' %}
+{% block context %}
+{% load static %}
+<hr class="featurette-divider">
+
+<div class="row featurette">
+    <div class="col-md-7 order-md-2">
+        <p class="lead">Стоимость: {{ product.price }}</p>
+        <p class="text">Наименование:</p>
+        <h2 class="featurette-heading">{{ product.name }}></h2>
+        <p class="text">Описание:</p>
+        <p class="lead">{{ product.description }}</p>
+        {% if request.user.is_moderator %}
+        <a class="btn btn-danger" href="{% url 'catalog:product_delete' product.pk %}">Удалить</a>
+        {% endif %}
+        {% if request.user == object.owner or request.user.is_moderator %}
+        <a class="btn btn-primary" href="{% url 'catalog:product_update' product.pk %}">  Редактировать</a>
+        {% endif %}
+    </div>
+    <div class="col-md-5 order-md-1">
+        {% if product.image_preview %}
+            <img src="/media/{{ product.image_preview }}" class="card-img-top" alt="product">
+        {% else %}
+            <img src="{% static 'apology.webp' %}" class="card-img-top" alt="product">
+        {% endif %}
     </div>
 </div>
+
 {% endblock %}

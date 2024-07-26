@@ -1,102 +1,94 @@
-from django.shortcuts import render
-from django.urls import reverse_lazy, reverse
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.http import HttpResponseRedirect
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+
+from .forms import BlogForm, NoneForm
+from .models import Blog
+from .apps import BlogConfig
 from pytils.translit import slugify
-from django.views.generic import CreateView, ListView, DetailView, UpdateView, DeleteView
-
-from blog.models import Blog
+from django.urls import reverse_lazy, reverse
 
 
-class BlogCreateView(CreateView):
+# Create your views here.
+
+
+class BlogCreateView(LoginRequiredMixin, CreateView):
     model = Blog
-    fields = ('title', 'text', 'blog_img',)
-    success_url = reverse_lazy('blog:list')
+    form_class = BlogForm
+    success_url = reverse_lazy('blog:blog_view')
+    extra_context = {
+        'project_name': BlogConfig.name,
+        'title': 'Создать блог'
+    }
+    login_url = "users:login"
 
     def form_valid(self, form):
+        # получает на вход форму, изменяет в атрибуте slug, сохраняет в БД
         if form.is_valid():
-            new_mat = form.save()
-            new_mat.slug = slugify(new_mat.title)
-            new_mat.save()
-
+            new_blog = form.save()
+            new_blog.slug = slugify(new_blog.title)  # запоминаем slug code
+            owner = self.request.user  # запоминаем владельца
+            new_blog.owner = owner
+            new_blog.save()
         return super().form_valid(form)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({'title': 'Создание материала'})
-        return context
 
-
-class BlogUpdateView(UpdateView):
+class BlogListView(LoginRequiredMixin, ListView):
     model = Blog
-    fields = ('title', 'text', 'blog_img', 'is_published',)
-
-    def form_valid(self, form):
-        """
-        Динамически формировать slug
-        """
-        if form.is_valid():
-            new_mat = form.save()
-            new_mat.slug = slugify(new_mat.title)
-            new_mat.save()
-
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        """
-        После успешного редактирования перенаправляет на просмотр материала
-        """
-        return reverse('blog:view', args=[self.kwargs.get('pk')])
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({'title': 'Редактирование статьи'})
-        return context
-
-
-class BlogListView(ListView):
-    model = Blog
-
-    def get_queryset(self, *args, **kwargs):
-        """
-        Выводить только опубликованные материалы
-        """
-        queryset = super().get_queryset(*args, **kwargs)
-        queryset = queryset.filter(is_published=True)
-        return queryset
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({'title': 'Блог'})
-        return context
+    extra_context = {
+        'project_name': BlogConfig.name,
+        'title': 'Список блогов',
+    }
 
 
 class BlogDetailView(DetailView):
     model = Blog
+    extra_context = {
+        'project_name': BlogConfig.name,
+        'title': 'Детализация блога'
+    }
 
     def get_object(self, queryset=None):
-        """
-        Счетчик просмотров
-        """
         self.object = super().get_object(queryset)
-        self.object.views_count += 1
+        self.object.count_view += 1
         self.object.save()
-
         return self.object
 
-    def get_context_data(self, *args, **kwargs):
-        context_data = super().get_context_data(*args, **kwargs)
 
-        blog_item = Blog.objects.get(pk=self.kwargs.get('pk'))
-        context_data['blog_pk'] = blog_item.pk,
-        context_data['title'] = f'Статья - {blog_item.title}'
-
-        return context_data
-
-
-class BlogDeleteView(DeleteView):
+class BlogUpdateView(LoginRequiredMixin, UpdateView):
     model = Blog
-    success_url = reverse_lazy('blog:list')
+    form_class = BlogForm
+    success_url = reverse_lazy('blog:blog_view')
+    extra_context = {
+        'project_name': BlogConfig.name,
+        'title': 'Обновление блога'
+    }
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({'title': 'Удаление статьи'})
-        return context
+    def get_form_class(self):
+        try:
+            self.request.user.groups.get(name='content_manager')
+        except BaseException:
+            return NoneForm
+        else:
+            return BlogForm
+
+    def form_valid(self, form):
+        # получает на вход форму, изменяет в атрибуте slug, сохраняет в БД
+        if form.is_valid():
+            new_blog = form.save()
+            new_blog.slug = slugify(new_blog.title)
+            new_blog.save()
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('blog:blog_detail', args=[self.kwargs.get('pk')])
+
+
+class BlogDeleteView(LoginRequiredMixin,  PermissionRequiredMixin, DeleteView):
+    model = Blog
+    success_url = reverse_lazy('blog:blog_view')
+
+    def has_permission(self):
+        return self.request.user.groups.filter(name='content_manager').exists()

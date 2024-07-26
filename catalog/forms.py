@@ -1,53 +1,76 @@
+from django.forms import ModelForm
+from .models import Product, Version, Category
 from django import forms
 
-from catalog.models import Product, Version
 
-
-class StyleFormMixin:
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field_name, field in self.fields.items():
-
-            if isinstance(field.widget, forms.widgets.CheckboxInput):
-                field.widget.attrs['class'] = 'form-check-input'
-            elif isinstance(field.widget, forms.DateTimeInput):
-                field.widget.attrs['class'] = 'form-control flatpickr-basic'
-            elif isinstance(field.widget, forms.DateInput):
-                field.widget.attrs['class'] = 'form-control datepicker'
-            elif isinstance(field.widget, forms.TimeInput):
-                field.widget.attrs['class'] = 'form-control flatpickr-time'
-            elif isinstance(field.widget, forms.widgets.SelectMultiple):
-                field.widget.attrs['class'] = 'form-control select2 select2-multiple'
-            elif isinstance(field.widget, forms.widgets.Select):
-                field.widget.attrs['class'] = 'form-control select2'
-            else:
-                field.widget.attrs['class'] = 'form-control'
-
-
-class ProductForm(StyleFormMixin, forms.ModelForm):
+class ProductForm(ModelForm):
+    category = forms.ModelChoiceField(queryset=Category.objects.all(), label='Категория', empty_label='Категория не выбрана')
     class Meta:
         model = Product
-        fields = '__all__'
+        fields = ['name', 'description', 'image_preview', 'category', 'price', 'public', ]
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control'}),
+            'image_preview': forms.FileInput(attrs={'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
+            'price': forms.NumberInput(attrs={'class': 'form-control'}),
+            'public': forms.CheckboxInput(attrs={'type': 'checkbox', 'class': 'checkbox', }),
+        }
 
     def clean_name(self):
-        cleaned_data = self.cleaned_data['name']
-        word_list = ['казино', 'криптовалюта', 'крипта', 'биржа', 'дешево', 'бесплатно', 'обман', 'полиция', 'радар']
-        for word in word_list:
-            if word in cleaned_data.lower():
-                raise forms.ValidationError(f'Использование слова "{word}" в названии запрещено!')
-        return cleaned_data
+        forbidden_words = ['казино', 'криптовалюта', 'крипта', 'биржа', 'дешево', 'бесплатно', 'обман', 'полиция',
+                           'радар']
 
-    def clean_description(self):
-        cleaned_data = self.cleaned_data['description']
-        word_list = ['казино', 'криптовалюта', 'крипта', 'биржа', 'дешево', 'бесплатно', 'обман', 'полиция', 'радар']
-        for word in word_list:
-            if word in cleaned_data.lower():
-                raise forms.ValidationError(f'Использование слова "{word}" в описании продукта запрещено!')
-        return cleaned_data
+        name = self.cleaned_data['name']
+        print(self.cleaned_data)
+        if name.lower() in forbidden_words:
+            raise forms.ValidationError("Название товара не может включать запрещенные слова")
+        return self.cleaned_data['name']
 
 
-class VersionForm(StyleFormMixin, forms.ModelForm):
+class ProductModeratorUpdateForm(ModelForm):
+    category = forms.ModelChoiceField(queryset=Category.objects.all(), label='Категория', empty_label='Категория не выбрана')
+    class Meta:
+        model = Product
+        fields = ['name', 'description', 'image_preview', 'category', 'price', 'public', ]
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control'}),
+            'image_preview': forms.FileInput(attrs={'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
+            'price': forms.NumberInput(attrs={'class': 'form-control'}),
+            'public': forms.CheckboxInput(attrs={'type': 'checkbox', 'class': 'checkbox', }),
+        }
+
+    def clean_name(self):
+        forbidden_words = ['казино', 'криптовалюта', 'крипта', 'биржа', 'дешево', 'бесплатно', 'обман', 'полиция',
+                           'радар']
+
+        name = self.cleaned_data['name']
+        print(self.cleaned_data)
+        if name.lower() in forbidden_words:
+            raise forms.ValidationError("Название товара не может включать запрещенные слова")
+        return self.cleaned_data['name']
+
+
+class ProductUserUpdateForm(ModelForm):
+
+    class Meta:
+        model = Product
+        fields = []
+
+
+class VersionForm(ModelForm):
     class Meta:
         model = Version
         fields = '__all__'
+        widgets = {
+            'version_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'version_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        labels = {
+            'version_number': 'Номер версии',
+            'version_name': 'Название версии',
+            'is_active': 'Активная версия',
+        }

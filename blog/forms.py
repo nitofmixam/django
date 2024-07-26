@@ -1,17 +1,23 @@
+from django.forms import ModelForm
+from blog.models import Blog
 from django import forms
-from .models import BlogArticle
 
 
-class StyleFormMixin:
+class BlogForm(ModelForm):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field_name, field in self.fields.items():
-            if not isinstance(field.widget, forms.CheckboxInput):
-                field.widget.attrs['class'] = 'form-control'
-
-
-class BlogArticleForm(StyleFormMixin, forms.ModelForm):
     class Meta:
-        model = BlogArticle
-        fields = '__all__'
+        model = Blog
+        fields = ['title', 'body', 'image_preview', 'is_public', ]
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'body': forms.Textarea(attrs={'class': 'form-control'}),
+            'image_preview': forms.FileInput(attrs={'class': 'form-control'}),
+            'is_public': forms.CheckboxInput(attrs={'type': 'checkbox', 'class': 'checkbox', }),
+        }
+
+
+class NoneForm(ModelForm):
+    """Форма для отображения пустых значений для пользователей не являющихся content-manager"""
+    class Meta:
+        model = Blog
+        fields = []

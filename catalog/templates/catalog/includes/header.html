@@ -1,0 +1,86 @@
+<div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-7">
+                <ul class="nav nav-pills">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'catalog:product' %}">Каталог</a>
+                    </li>
+                    <li class="nav-item">
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'blog:blog_view' %}">Блог</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-5">
+                <h5 class="nav-link active" aria-current="page">Ломо-оптика</h5>
+            </div>
+        </div>
+    </div>
+    {% if user.is_authenticated %}
+    <div class="container">
+        <div class="row">
+            <div class="col-2">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-7">
+                            <ul class="nav nav-pills">
+                                <li class="nav-item">
+                                    <a class="nav-link active" href="{% url 'main:product' %}">Каталог</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'contacts:contacts' %}">Контакты</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'blog:blog_view' %}">Блог</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <h5 class="nav-link active" aria-current="page">Ломо-оптика</h5>
+                        </div>
+                    </div>
+                </div>
+                {% if user.is_authenticated %}
+                <div class="container">
+                    <div class="row">
+                        <div class="col-2">
+                            <ul class="nav nav-pills">
+                                <li class="nav-item" aria-current="page">
+                                    <h5 class="bg-success text-white align-content-center">
+                                        {{ user.username }}
+                                    </h5>
+                                    <form method="post" action="{% url 'users:logout' %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-primary">Выйти</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="container">
+                    <div class="row">
+                        <div class="col-2">
+                            <ul class="nav nav-pills">
+                                <li class="nav-item" aria-current="page">
+                                    <a class="nav-link" href="{% url 'users:login' %}">Войти</a>
+                                </li>
+                                <li class="nav-item" aria-current="page">
+                                    <a class="nav-link" href="{% url 'users:register' %}">Регистрация</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}

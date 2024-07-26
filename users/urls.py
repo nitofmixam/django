@@ -1,17 +1,16 @@
-from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
-
-from users.apps import UsersConfig
-from users.views import RegisterView, ProfileView, email_verification, UserPasswordResetView, UserLoginView
-
+from . import views
+from .apps import UsersConfig
+from django.contrib.auth.views import LogoutView
 
 app_name = UsersConfig.name
 
 urlpatterns = [
-    path('', UserLoginView.as_view(template_name='users/login.html'), name='login'),
+    path('login/', views.LoginUser.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
-    path('register/', RegisterView.as_view(), name='register'),
-    path('profile/', ProfileView.as_view(), name='profile'),
-    path('email-confirm/<str:token>/', email_verification, name='email-confirm'),
-    path('recovery_form/', UserPasswordResetView.as_view(), name='recovery_form'),
+    path('register/', views.RegisterView.as_view(), name='register'),
+    path('password-reset/', views.UserPasswordReset.as_view(), name='password_reset_form'),
+    path('password-reset/done/', views.UserPasswordResetDone.as_view(), name='password_reset_done'),
+    path('password-reset/<uidb64>/<token>/', views.UserPasswordResetConfirm.as_view(), name='password_reset_confirm'),
+    path('password-reset/complete/', views.UserPasswordResetComplete.as_view(), name='password_reset_complete'),
 ]

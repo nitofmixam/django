@@ -1,40 +1,26 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm, PasswordResetForm, AuthenticationForm
-
+from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from users.models import User
 
 
-class StyleFormMixin:
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
+class UserLoginForm(AuthenticationForm):
 
-
-class UserRegisterForm(StyleFormMixin, UserCreationForm):
     class Meta:
-        model = User
-        fields = ('email', 'password1', 'password2')
+        model = get_user_model()
+        fields = ('email', 'password', )
 
 
-class UserProfileForm(StyleFormMixin, UserChangeForm):
+class RegistrationForm(UserCreationForm):
     class Meta:
-        model = User
-        fields = ('email', 'first_name', 'last_name', 'phone', 'avatar', 'country')
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.fields['password'].widget = forms.HiddenInput()
-
-
-class UserLoginForm(StyleFormMixin, AuthenticationForm):
-    class Meta:
-        model = User
-        fields = ('email', 'password',)
-
-
-class UserRecoveryForm(StyleFormMixin, PasswordResetForm):
-    class Meta:
-        model = User
-        fields = ('email',)
+        model = get_user_model()
+        fields = ('email', 'password1', 'password2', 'username', 'avatar', 'phone', 'country', )
+        widgets = {
+            'email': forms.EmailInput(attrs={'class': 'form-input'}),
+            'password1': forms.PasswordInput(attrs={'class': 'form-input'}),
+            'password2': forms.PasswordInput(attrs={'class': 'form-input'}),
+            'username': forms.TextInput(attrs={'class':'form-input'}),
+            'avatar': forms.FileInput(attrs={'class': 'form-input'}),
+            'phone': forms.TextInput(attrs={'class': 'form-input'}),
+            'country': forms.TextInput(attrs={'class': 'form-input'}),
+        }

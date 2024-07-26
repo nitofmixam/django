@@ -1,25 +1,25 @@
-{% extends 'catalog/base.html' %}
+{% extends "catalog/base.html" %}
 
-{% block content %}
-<div class="col-12">
-    <form class='row' method="post" enctype="multipart/form-data">
-        <div class="col-3"></div>
-        <div class="col-6">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">
-                        Вход
-                    </h2>
-                </div>
-                <div class="card-body">
+{% block context %}
+
+<div class="container" xmlns="http://www.w3.org/1999/html">
+    <div class="row">
+        <div class="col-12">
+            <div class="card-title">
+                <h2>Авторизация</h2>
+                <form method="post">
                     {% csrf_token %}
-                    {{ form.as_p }}
-                    <button type="submit" class="btn btn-success">Войти</button>
-                    <a class="btn btn-dark" href="{% url 'users:recovery_form' %}">Забыл пароль</a>
-                </div>
-                <div class="card-footer"></div>
+                    <div class="form-error">{{ form.non_field_errors }}</div>
+                    {% for f in form %}
+                    <p><label class="form-label" for="{{ f.id_for_label }}">{{ f.label }}</label>{{ f }}</p>
+                    <div class="form-error">{{ f.errors }}</div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary">Войти</button>
+                    <p><a href="{% url 'users:password_reset_form' %}">Забыли пароль?</a></p>
+                </form>
             </div>
         </div>
-    </form>
+    </div>
 </div>
+
 {% endblock %}
