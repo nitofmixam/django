@@ -1,49 +1,35 @@
 {% extends 'catalog/base.html' %}
 {% block content %}
-<div class="col-12">
-    <form class="row" method="post" enctype="multipart/form-data">
+<div class="container">
+     <form class="row" method="post" enctype="multipart/form-data">
         <div class="col-6">
-            <div class="card">
-                <div class="card-header">
-                    {% if object %}
-                        <h5 class="card-title">Редактирование продукта</h5>
-                    {% else %}
-                        <h5 class="card-title">Добавление продукта</h5>
-                    {% endif %}
-                </div>
-                <div class="card-body">
-
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <button type="submit" class="btn btn-success">
+                <div class="card">
+                    <p class='card-text'>Продукт</p>
+                    <div class="card-body">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">
                         {% if object %}
                         Сохранить
                         {% else %}
                         Создать
                         {% endif %}
                     </button>
-
                 </div>
-            </div>
         </div>
-        <div class="col-6">
+         <div class="col-6">
             <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">Добавление версии</h5>
-                </div>
+                <p class='card-text'>Версия</p>
                 <div class="card-body">
-                    {{ formset.management_form }}
+                    {{formset.management_form }}
                     {% for form in formset.forms %}
-                        {{ form.as_p }}
-                        {% if not forloop.last %}
-                             <hr>
-                        {% endif %}
+                    {{ form.as_p }}
                     {% endfor %}
+
                 </div>
             </div>
-        </div>
-    </form>
+         </div>
+     </form>
 </div>
-
-
 {% endblock %}

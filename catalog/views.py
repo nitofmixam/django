@@ -1,18 +1,15 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.forms import inlineformset_factory
-from django.urls import reverse_lazy, reverse
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
+from django.views.generic import ListView, DetailView, TemplateView, CreateView, UpdateView
 
-from catalog.forms import ProductForm, VersionForm, VersionFormSet, ProductModeratorForm
-from catalog.models import Product, Contact, Version, Category
-from catalog.services import get_categories_from_cache, get_products_from_cache
+from catalog.forms import ProductForm, VersionForm, ProductModeratorForm
+from catalog.models import Product, Version
+from catalog.services import get_category_from_cache
 
 
 class ProductListView(ListView):
-    """
-    Контроллер, который отвечает за отображение списка продуктов
-    """
     model = Product
 
     def get_context_data(self, *args, **kwargs):
@@ -32,55 +29,49 @@ class ProductListView(ListView):
         return context_data
 
     def get_queryset(self):
-        return get_products_from_cache()
+        return get_category_from_cache()
 
 
 class ProductDetailView(DetailView):
-    """
-    Контроллер, который отвечает за отображение информации о конкретном продукте
-    """
     model = Product
+
+
+class ContactsView(TemplateView):
+    template_name = "catalog/contacts.html"
 
 
 class ProductCreateView(LoginRequiredMixin, CreateView):
-    """
-    Контроллер, который отвечает за создание продукта
-    """
     model = Product
     form_class = ProductForm
-    success_url = reverse_lazy('catalog:products_list')
+    success_url = reverse_lazy('catalog:product_list')
 
     def form_valid(self, form):
         product = form.save()
-        user = self.request.user
+        user = self.request.user  # получаю авторизованного пользователя
         product.owner = user
         product.save()
         return super().form_valid(form)
 
 
 class ProductUpdateView(LoginRequiredMixin, UpdateView):
-    """
-    Контроллер, который отвечает за редактирование продукта
-    """
     model = Product
     form_class = ProductForm
-
-    def get_success_url(self):
-        return reverse('catalog:products_detail', args=[self.kwargs.get('pk')])
+    success_url = reverse_lazy('catalog:product_list')
 
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
-        ProductFormset = inlineformset_factory(Product, Version, form=VersionForm, formset=VersionFormSet, extra=1)
-        if self.request.method == "POST":
-            context_data["formset"] = ProductFormset(self.request.POST, instance=self.object)
+        ProductFormset = inlineformset_factory(Product, Version, VersionForm,
+                                               extra=1)  # основная модель, дополнителная модель, модель из форм, количество форм
+        if self.request.method == 'POST':
+            context_data['formset'] = ProductFormset(self.request.POST, instance=self.object)
         else:
-            context_data["formset"] = ProductFormset(instance=self.object)
+            context_data['formset'] = ProductFormset(instance=self.object)
         return context_data
 
     def form_valid(self, form):
         context_data = self.get_context_data()
-        formset = context_data["formset"]
-        if form.is_valid and formset.is_valid():
+        formset = context_data['formset']
+        if formset.is_valid() and form.is_valid():
             self.object = form.save()
             formset.instance = self.object
             formset.save()
@@ -89,47 +80,10 @@ class ProductUpdateView(LoginRequiredMixin, UpdateView):
             return self.render_to_response(self.get_context_data(form=form, formset=formset))
 
     def get_form_class(self):
-        user = self.request.user
-        if user == self.object.owner:
-            return ProductForm
-        if (user.has_perm('catalog.can_edit_description') and user.has_perm('catalog.can_edit_category')
-                and user.has_perm('catalog.can_change_is_published')):
-            return ProductModeratorForm
-        raise PermissionDenied
-
-
-class ProductDeleteView(LoginRequiredMixin, DeleteView):
-    """
-    Контроллер, который отвечает за удаление продукта
-    """
-    model = Product
-    success_url = reverse_lazy('catalog:products_list')
-
-    def get_object(self, queryset=None):
-        self.object = super().get_object(queryset)
-        if self.request.user == self.object.owner or self.request.user.is_superuser:
-            return self.object
-        raise PermissionDenied
-
-
-class CategoryListView(LoginRequiredMixin, ListView):
-    """
-    Контроллер, который отвечает за отображение списка категорий
-    """
-    model = Category
-
-    def get_queryset(self):
-        return get_categories_from_cache()
-
-
-class ContactCreateView(CreateView):
-    """
-    Контроллер, который отвечает за отображение контактной информации
-    """
-    model = Contact
-    fields = (
-        "name",
-        "phone",
-        "message",
-    )
-    success_url = reverse_lazy("catalog:contacts")
+        user = self.request.user  # получаем юзера
+        if user == self.object.owner:  # если юзер является хозяином магазина
+            return ProductForm  # возвращаем обычную форму
+        if user.has_perm('catalog.can_canceled_public') and user.has_perm(
+                'catalog.can_edit_category') and user.has_perm('catalog.can_edit_desk'):  # если имеет эти права
+            return ProductModeratorForm  # возвращаем форму для модераторов
+        raise PermissionDenied  # выдает ошибку 403
