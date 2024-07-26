@@ -1,0 +1,31 @@
+{% load my_tags %}
+<div class="col-6 d-flex h-100 p-3 mx-auto flex-column">
+    <div class="card mb-4 box-shadow">
+        <img class="card-img-top" src="{{ object.image|mymedia }}" alt="product">
+        <div class="card-body">
+            <h1 class="card-title pricing-card-title">{{ object.price }} руб.</h1>
+            <h6 class="card-title pricing-card-title">{{ object.category }}</h6>
+            <ul class="list-unstyled mt-3 mb-4 text-start m-3">
+                <li><b>Описание:</b> {{ object.description }}</li>
+                <li><b>Дата создания:</b> {{ object.created_at }}</li>
+                <li><b>Дата изменения:</b> {{ object.updated_at }}</li>
+                {% if version %}
+                <li><b>Номер активной версии:</b> {{ version.version_number }}</li>
+                <li><b>Название активной версии:</b> {{ version.version_name }}</li>
+                {% endif %}
+
+            </ul>
+            <a href="#" class="btn btn-lg btn-block btn-outline-primary" style="width: 100%;">Купить</a>
+        </div>
+        <div class="card-footer">
+            <div class="btn-group">
+                {% if user.is_authenticated %}
+                <a href="{% url 'catalog:product_update' object.pk %}" type="button"
+                   class="btn btn-sm btn-outline-secondary">Редактировать</a>
+                <a href="{% url 'catalog:product_delete' object.pk %}" type="button"
+                   class="btn btn-sm btn-outline-danger">Удалить</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

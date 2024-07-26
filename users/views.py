@@ -1,73 +1,87 @@
-import random
 import secrets
-import string
 
+from django.contrib.auth.views import PasswordResetView, LoginView
 from django.core.mail import send_mail
-from django.shortcuts import get_object_or_404, redirect, render
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
-from django.views.generic import CreateView
+from django.views.generic import CreateView, UpdateView
 
-from config.settings import EMAIL_HOST_USER
-from users.forms import UserRegisterForm
+from users.forms import UserRegisterForm, UserProfileForm, UserRecoveryForm, UserLoginForm
 from users.models import User
 
+from config.settings import EMAIL_HOST_USER
+from users.services import make_random_password
 
-class UserCreateView(CreateView):
+
+class RegisterView(CreateView):
     model = User
     form_class = UserRegisterForm
+    template_name = 'users/register.html'
     success_url = reverse_lazy('users:login')
 
     def form_valid(self, form):
-        user = form.save()  # сохраняем пользователя
-        user.is_active = False  # устанавливаем значение "не активный"
-        token = secrets.token_hex(16)  # генерируем токен
-        user.token = token  # сохраняем токен в поле token в модели User
-        user.save()  # сохраняем изменения в базу
-        host = self.request.get_host()  # получаем хост с которого пришел пользователь
-        url = f'http://{host}/users/email-confirm/{token}/'  # ссылка котоая отправится пользователю
+        user = form.save()
+        user.is_active = False
+        token = secrets.token_hex(16)
+        user.token = token
+        user.save()
+        host = self.request.get_host()
+        url = f'http://{host}/users/email-confirm/{token}/'
         send_mail(
-            subject='Подтверждение почты',  # тема письма
-            message=f'Перейди по ссылке для подтверждения почты {url}',  # сообщение
-            from_email=EMAIL_HOST_USER,  # с какого имейла отправляем
-            recipient_list=[user.email]  # список имейлов на которфе отправляем
+            subject='Подтверждение почты',
+            message=f'Привет! Перейди по ссылке для подтверждения почты - {url}',
+            from_email=EMAIL_HOST_USER,
+            recipient_list=[user.email]
         )
-        return super().form_valid(
-            form)  # возвращаем родительский метод, который отправляет данные в форму и сохраняет в базу
+        return super().form_valid(form)
+
+
+class UserLoginView(LoginView):
+    model = User
+    form_class = UserLoginForm
+    success_url = reverse_lazy('catalog:home')
 
 
 def email_verification(request, token):
-    user = get_object_or_404(User, token=token)  # получаем пользователя по токену
-    user.is_active = True  # меняем статус пользователя на активный
-    user.save()  # сохраняем изменения в базу
+    user = get_object_or_404(User, token=token)
+    user.is_active = True
+    user.save()
     return redirect(reverse('users:login'))
 
 
-def passwords():
-    """
-    Генерирует случайный пароль из набора символов
-    """
-    symbols = string.ascii_lowercase + string.ascii_uppercase + string.digits
-    num = random.randint(8, 15)
-    password = ''.join(random.sample(symbols, num))
-    return password
+class ProfileView(UpdateView):
+    model = User
+    form_class = UserProfileForm
+    success_url = reverse_lazy('users:profile')
+
+    def get_object(self, queryset=None):
+        return self.request.user
 
 
-def reset_password(request):
-    """
-    Страница для сброса пароля.
-    При получении POST-запроса с email, генерирует новый пароль, сохраняет его в базе, и отправляет письмо с новым паролем.
-    """
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        user = get_object_or_404(User, email=email)  # eсли имейл зарегистрирован
-        password = passwords()
-        user.set_password(password)
-        user.save()
-        send_mail(
-            subject='Сброс пароля',  # тема письма
-            message=f' Ваш новый пароль {password}',  # сообщение
-            from_email=EMAIL_HOST_USER,  # с какого имейла отправляем
-            recipient_list=[user.email]  # список имейлов на которых отправляем
-        )
-        return redirect(reverse('users:login'))
-    return render(request, 'users/reset_password.html')
+class UserPasswordResetView(PasswordResetView):
+    form_class = UserRecoveryForm
+    template_name = 'users/recovery_form.html'
+    success_url = reverse_lazy('users:login')
+
+    def form_valid(self, form):
+        if self.request.method == 'POST':
+            user_email = self.request.POST.get('email')
+            user = User.objects.filter(email=user_email).first()
+            if user:
+                new_password = make_random_password()
+                user.set_password(new_password)
+                user.save()
+                try:
+                    send_mail(
+                        subject="Восстановление пароля",
+                        message=f"Здравствуйте! Ваш пароль для доступа на наш сайт изменен:\n"
+                                f"Данные для входа:\n"
+                                f"Email: {user_email}\n"
+                                f"Пароль: {new_password}",
+                        from_email=EMAIL_HOST_USER,
+                        recipient_list=[user.email]
+                    )
+                except Exception:
+                    print(f'Ошибка пр отправке письма, {user.email}')
+                return HttpResponseRedirect(reverse('users:login'))

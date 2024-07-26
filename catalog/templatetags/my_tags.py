@@ -4,14 +4,8 @@ register = template.Library()
 
 
 @register.filter()
-def media_filter(path):
-    if path:
-        return f"/media/{path}"
-    return "#"
+def mymedia(val):
+    if val:
+        return f'/media/{val}'
 
-
-@register.filter()
-def truncatechars(path):
-    if len(path) >= 100:
-        return path[0:99]
-    return path
+    return 'holder.js/100px225?theme=thumb&bg=55595c&fg=eceeef&text=None'
