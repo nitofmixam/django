@@ -3,9 +3,11 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, \
     PasswordResetCompleteView
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView
+from django.views.generic import CreateView, FormView
+
+from config.settings import EMAIL_HOST_USER
 from .forms import UserLoginForm, RegistrationForm
 from .apps import UsersConfig
 from .models import User
@@ -24,26 +26,32 @@ class LoginUser(LoginView):
     }
 
 
-class RegisterView(CreateView):
+class RegisterView(FormView):
     model = User
     form_class = RegistrationForm
     template_name = 'users/register.html'
     success_url = reverse_lazy('users:login')
 
+    def __init__(self, **kwargs):
+        super().__init__(kwargs)
+        self.success_ulr = None
+
     def form_valid(self, form):
-        if form.is_valid():
-            field = form.cleaned_data
-            send_mail(
-                "Congratulations! You have registered in Sky.pro sales of optical goods",
-                f"""Hi, {field.get('username')}. This is a test e-mail from Sky.pro optic to Sky.
-                Your email: {field.get('email')}.
-                Your password: {field.get('password1')}."
-                'Remember to change it after login.""",
-                '21cfk8lf6gbp@mail.ru',
-                [field.get('email'), 'ice_eyes@mail.ru'],
-                fail_silently=False,
-            )
-        return super().form_valid(form)
+        email = form.cleaned_data['email']
+        user = User.objects.filter(email=email).first()
+        if not user:
+            form.add_error(None, 'User not found')
+            return self.form_invalid(form)
+
+        new_password = User.objects.make_random_password()
+        user.set_password(new_password)
+        user.save()
+
+        send_mail(subject='Сброс пароля',  # тема письма
+                  message=f' Ваш новый пароль {new_password}',  # сообщение
+                  from_email=EMAIL_HOST_USER,  # с какого имейла отправляем
+                  recipient_list=[user.email])
+        return redirect(self.success_ulr)
 
 
 class UserPasswordReset(PasswordResetView):
@@ -63,5 +71,3 @@ class UserPasswordResetConfirm(PasswordResetConfirmView):
 
 class UserPasswordResetComplete(PasswordResetCompleteView):
     template_name = 'users/password_reset_complete.html'
-
-
