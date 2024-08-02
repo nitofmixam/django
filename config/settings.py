@@ -126,21 +126,19 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, MEDIA_URL[1:])
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+AUTH_USER_MODEL = 'users.User'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
 
 EMAIL_HOST = 'smtp.mail.ru'
-EMAIL_PORT = 2525
-EMAIL_HOST_USER = "21cfk8lf6gbp@mail.ru"
-EMAIL_HOST_PASSWORD = "1NX21AcSLns2XUkuQbsv"
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
+EMAIL_PORT = 465
+EMAIL_HOST_USER = "maks-fotin@mail.ru"
+EMAIL_HOST_PASSWORD = "190573Max"
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
 
-LOGIN_REDIRECT_URL = "catalog:product"
-LOGIN_URL = "users:login"
-LOGOUT_REDIRECT_URL = "catalog:product"
-
-AUTH_USER_MODEL = "users.User"
-
-# для того чтобы не отправлять письма физически, а только в консоли
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+SERVER_EMAIL = EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

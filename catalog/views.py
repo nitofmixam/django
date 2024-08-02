@@ -1,127 +1,123 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from .models import Product, Category, Version
-from .apps import CatalogConfig
-from django.core.paginator import Paginator
-from .forms import ProductForm, VersionForm
-from django.urls import reverse_lazy
+from django.core.exceptions import PermissionDenied
 from django.forms import inlineformset_factory
-from users.models import User
-from .forms import ProductModeratorUpdateForm, ProductUserUpdateForm
+from django.shortcuts import render
+from django.urls import reverse_lazy, reverse
+from django.views.generic import TemplateView, ListView, View, DetailView, CreateView, UpdateView, DeleteView
+
+from catalog.forms import ProductForm, VersionForm, ProductModeratorForm
+from catalog.models import Product, Version
 
 
-class CatalogListView(LoginRequiredMixin, ListView):
-    model = Product
-    paginate_by = 8
-    context_object_name = 'products'
+class HomeView(TemplateView):
+    template_name = 'catalog/home.html'
     extra_context = {
-        'project_name': CatalogConfig.name,
-        'title': 'Каталог продуктов',
-    }
-
-    def get_context_data(self, *args, **kwargs):
-        self.content = super().get_context_data(*args, **kwargs)
-        query_list = self.get_queryset(*args, **kwargs)
-        for query in query_list:
-            try:
-                v = Version.objects.get(pk=query.pk)
-            except v.DoesNotExist:
-                continue
-            else:
-                if v and v.is_active:
-                    query.name = v.version_name + ' Version #' + v.version_number
-        p = Paginator(query_list, self.paginate_by)
-        page_number = self.request.GET.get('page')
-        page_obj = p.get_page(page_number)
-        self.content['page_obj'] = page_obj
-        return self.content
-
-
-# def catalog_list(request):
-#     # Клон CatalogListView
-#     products = Product.objects.all()
-#     for product in products:
-#         try:
-#             v = Version.objects.get(pk=product.pk)
-#         except v.DoesNotExist:
-#             continue
-#         else:
-#             if v and v.is_active:
-#                 product.name = 'Версионное название'
-#     p = Paginator(products, 8)
-#     page_number = request.GET.get('page')
-#     page_obj = p.get_page(page_number)
-#     return render(request, 'catalog/product_list.html', {'page_obj': page_obj, 'project_name': CatalogConfig.name})
-
-
-class CatalogDetailView(LoginRequiredMixin, DetailView):
-    model = Product
-    extra_context = {
-        'project_name': CatalogConfig.name,
-        'title': 'Детализация товара'
-    }
-
-
-class CatalogCreateView(LoginRequiredMixin, CreateView):
-    model = Product
-    form_class = ProductForm
-    success_url = reverse_lazy('catalog:product')
-    extra_context = {
-        'project_name': CatalogConfig.name,
-        'title': 'Создание товара'
-    }
-
-    def form_valid(self, form):
-        # получает на вход форму, сохраняет в БД
-        if form.is_valid():
-            user = form.save()
-            user.owner = User.objects.get(username=self.request.user.username)
-        return super().form_valid(form)
-
-
-class CatalogUpdateView(LoginRequiredMixin, UpdateView):
-    model = Product
-    success_url = reverse_lazy('catalog:product')
-    extra_context = {
-        'project_name': CatalogConfig.name,
-        'title': 'Редактирование товара'
+        'title': 'Главная',
     }
 
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
-        ProductFormset = inlineformset_factory(Product, Version, form=VersionForm, extra=1)
+        context_data['object_list'] = Product.objects.all()
+        return context_data
+
+
+class ProductListView(ListView):
+    model = Product
+    extra_context = {
+        'title': 'Продукты',
+    }
+
+
+class ProductDetailView(DetailView):
+    model = Product
+
+    def get_context_data(self, *args, **kwargs):
+        context_data = super().get_context_data(*args, **kwargs)
+        product_name = Product.objects.get(pk=self.kwargs.get('pk'))
+        context_data['title'] = f'Продукт - {product_name.name}'
+        active_version = Version.objects.filter(product=self.object, is_active=True).first()
+        context_data['version'] = active_version
+
+        return context_data
+
+
+class ProductCreateView(LoginRequiredMixin, CreateView):
+    model = Product
+    form_class = ProductForm
+    success_url = reverse_lazy('catalog:products')
+
+    # def get_success_url(self):
+    #     return reverse('catalog:product', args=[self.kwargs.get('pk')])
+
+    def form_valid(self, form):
+        self.object = form.save()
+        self.object.owner = self.request.user
+        self.object.save()
+
+        form.instance.user = self.request.user
+
+        return super().form_valid(form)
+
+
+class ProductUpdateView(LoginRequiredMixin, UpdateView):
+    model = Product
+
+    # form_class = ProductForm
+
+    # success_url = reverse_lazy('catalog:products')
+
+    def get_success_url(self):
+        return reverse('catalog:product', args=[self.kwargs.get('pk')])
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        VersionFormset = inlineformset_factory(Product, Version, form=VersionForm, extra=1)
         if self.request.method == 'POST':
-            context_data['formset'] = ProductFormset(self.request.POST, instance=self.object)
+            formset = VersionFormset(self.request.POST, instance=self.object)
         else:
-            context_data['formset'] = ProductFormset(instance=self.object)
+            formset = VersionFormset(instance=self.object)
+
+        context_data['formset'] = formset
+
         return context_data
 
     def form_valid(self, form):
-        formset = self.get_context_data().get('formset')
+
+        context_data = self.get_context_data()
+        formset = context_data['formset']
         self.object = form.save()
-        if form.is_valid():
+
+        if formset.is_valid():
             formset.instance = self.object
             formset.save()
+
         return super().form_valid(form)
 
     def get_form_class(self):
-        """Переопределяет форму для модераторов и обычных пользователей"""
-        try:
-            self.request.user.groups.get(name='moderators')
-        except BaseException:
-            return ProductUserUpdateForm
-        else:
-            return ProductModeratorUpdateForm
+        user = self.request.user
+        if user == self.object.owner:
+            return ProductForm
+        if user.has_perm('catalog.set_published') and user.has_perm('catalog.change_description') and user.has_perm(
+                'catalog.change_category'):
+            return ProductModeratorForm
+        raise PermissionDenied
 
 
-class CatalogDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+class ProductDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Product
-    success_url = reverse_lazy('catalog:product')
-    extra_context = {
-        'project_name': CatalogConfig.name,
-        'title': 'Создание товара'
+    permission_required = 'catalog.delete_product'
+    success_url = reverse_lazy('catalog:products')
+
+
+def contacts(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        phone = request.POST.get('phone')
+        message = request.POST.get('message')
+        print(f'Имя: {name}\nТелефон: {phone}\nСообщение: {message}')
+
+    context = {
+        'title': 'Контакты'
     }
 
-    def has_permission(self):
-        return self.request.user.groups.filter(name='moderators').exists() or \
-            self.request.user.has_perm('catalog.delete_product')
+    return render(request, 'catalog/contacts.html', context)

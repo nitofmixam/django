@@ -20,10 +20,14 @@
         <div class="card-footer">
             <div class="btn-group">
                 {% if user.is_authenticated %}
+                {% if perms.catalog.set_published and perms.catalog.change_description and perms.catalog.change_category or user == product.owner %}
                 <a href="{% url 'catalog:product_update' object.pk %}" type="button"
                    class="btn btn-sm btn-outline-secondary">Редактировать</a>
+                {% endif %}
+                {% if perms.catalog.delete_product or user == product.owner %}
                 <a href="{% url 'catalog:product_delete' object.pk %}" type="button"
                    class="btn btn-sm btn-outline-danger">Удалить</a>
+                {% endif %}
                 {% endif %}
             </div>
         </div>

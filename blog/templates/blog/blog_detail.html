@@ -1,40 +1,33 @@
-{% extends 'catalog/base.html'%}
-{% block context %}
-<table class="table table-striped">
-    <thead>
-    <tr>
-        <td>
-            Блог
-        </td>
-        <td>
-        </td>
-    </tr>
-    </thead>
-    <tbody>
-    <tr>
-        <td>
-            Название:
-        </td>
-        <td>
-            {{ object.title }}
-        </td>
-    </tr>
-    <tr>
-        <td>
-            Описание:
-        </td>
-        <td>
-            {{ object.body }}
-        </td>
-    </tr>
-    <tr>
-        <td>
-            Просмотры:
-        </td>
-        <td>
-            {{object.count_view}}
-        </td>
-    </tr>
-    </tbody>
-</table>
+{% extends 'catalog/base.html' %}
+
+{% block content %}
+{% load my_tags %}
+<div class="container">
+    <div class="row text-center">
+        <div class="col-12">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                Статья "{{ object.title }}"
+                                ({{ object.slug }})
+                            </h3>
+                        </div>
+                        <img class="card-img-top d-flex h-100 p-3 mx-auto flex-column" src="{{ object.blog_img|mymedia }}" alt="blog_img" style="max-width: 50%;">
+                        <div class="card-body">
+                            <p>
+                                {{ object.text }}
+                            </p>
+                        </div>
+                        <div class="card-footer">
+                            Просмотры: {{ object.views_count }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

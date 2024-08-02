@@ -1,74 +1,67 @@
 from django.db import models
+
 from users.models import User
 
-
 # Create your models here.
+
+NULLABLE = {'blank': True, 'null': True}
+
+
 class Category(models.Model):
-    name = models.CharField(
-        max_length=50, verbose_name="Название категории", help_text="Введите строку названия категории"
-    )
-    description = models.TextField(verbose_name="Описание категории", help_text="Введите описание категории",
-                                   blank=True, null=True)
+    name = models.CharField(max_length=150, verbose_name='Наименование')
+    description = models.TextField(**NULLABLE, verbose_name='Описание')
 
     def __str__(self):
-        return self.name
+        return f'{self.name}'
 
     class Meta:
-        verbose_name = "Категория"
-        verbose_name_plural = "Категории"
-        ordering = ("id",)
+        verbose_name = 'категория'
+        verbose_name_plural = 'категории'
 
 
 class Product(models.Model):
-    name = models.CharField(max_length=100, verbose_name="Название товара", help_text="Введите строку названия товара")
-    description = models.TextField(verbose_name="Описание товара", help_text="Введите описание товара", blank=True,
-                                   null=True)
-    image_preview = models.ImageField(
-        upload_to="products/photo",
-        blank=True,
-        null=True,
-        verbose_name="Фото",
-        help_text="Загрузите фото товара",
-    )
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="categories", blank=True, null=True)
-    price = models.FloatField(verbose_name="Стоимость товара", help_text="Введите строку стоимости товара",
-                              blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
-    owner = models.ForeignKey(User, on_delete=models.SET_NULL, verbose_name='Владелец', null=True, blank=True)
-    public = models.BooleanField(default=False, verbose_name='Признак публикации')
+    name = models.CharField(max_length=100, verbose_name='Наименование')
+    description = models.CharField(**NULLABLE, verbose_name='Описание')
+    image = models.ImageField(upload_to='product/', **NULLABLE, verbose_name='Изображение (превью)')
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, verbose_name='Категория', blank=True, null=True)
+    price = models.IntegerField(verbose_name='цена', blank=True, null=True)
+    created_at = models.DateField(auto_now_add=True, **NULLABLE, verbose_name='Дата создания')
+    updated_at = models.DateField(auto_now=True, **NULLABLE, verbose_name='Дата последнего изменения')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Владелец', **NULLABLE)
+    is_published = models.BooleanField(default=False, verbose_name='Опубликовано')
 
     def __str__(self):
-        return self.name
+        return f'{self.name} {self.description} {self.category} {self.price}'
 
     class Meta:
-        verbose_name = "Продукт"
-        verbose_name_plural = "Продукты"
-        ordering = ("name",)
+        verbose_name = 'продукт'
+        verbose_name_plural = 'продукт'
+        ordering = ('name',)
         permissions = [
             (
-                "delete_public_product", "Can disable product"
+                'set_published',
+                'Can publish product'
             ),
             (
-                "change_product_description", "Can change product description"
+                'change_description',
+                'Can change description'
             ),
             (
-                "change_product_category", "Can change product category"
-            ),
+                'change_category',
+                'Can change category'
+            )
         ]
 
 
 class Version(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="versions", )
-    version_number = models.CharField(max_length=100, verbose_name="Номер версии", blank=True, null=True)
-    version_name = models.CharField(max_length=100, verbose_name='Название версии', help_text='Введите название версии',
-                                    blank=True, null=True)
-    is_active = models.BooleanField(verbose_name='Признак текущей версии', help_text='Активно?')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='Продукт')
+    version_number = models.CharField(max_length=50, verbose_name='Номер версии', **NULLABLE)
+    version_name = models.CharField(max_length=50, verbose_name='Название версии', blank=True, null=True)
+    is_active = models.BooleanField(verbose_name='Признак текущей версии', default=False)
 
     def __str__(self):
-        return f"Product - {self.product}, Version - {self.version_number}"
+        return f'{self.version_number} - {self.version_name}'
 
     class Meta:
-        verbose_name = "Версия продукта"
-        verbose_name_plural = "Версии продуктов"
-        ordering = ("product",)
+        verbose_name = 'версия'
+        verbose_name_plural = 'версии'

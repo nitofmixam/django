@@ -1,52 +1,18 @@
-{% extends "catalog/base.html" %} {# Расширяем содержимое базовым классом #}
-{% block context %}
-{% load static %}
-{% load get_path_for_media %}
-<div class="row justify-content-sm-center">
-    <div class="col-3">
-        <nav aria-label="...">
-            <ul class="pagination">
-                {% if page_obj.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">
-                    {{page_obj.previous_page_number}}</a></li>
-                {% endif %}
-                <li class="page-item active"><a class="page-link" href="?page={{ page_obj.number }}">{{page_obj.number}}</a></li>
-                {% if page_obj.has_next %}
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">
-                    {{page_obj.next_page_number}}</a></li>
-                {% endif %}
-            </ul>
-        </nav>
-    </div>
+{% extends 'catalog/base.html' %}
+{% block content %}
+<div class="pricing-header px-3 py-3 pb-md-4 mx-auto text-center">
+    <p class="lead">Все наши продукты</p>
 </div>
-<div class="row md-5">
-    <div class="container">
-        <a class="btn btn-primary" href="{% url 'catalog:product_create' %}" role="button">
-            Добавить продукт
-        </a>
-    </div>
+<div class="container">
+<div class="col-12 mb-5">
+    {% if user.is_authenticated %}
+    <a class="btn btn-outline-primary" href="{% url 'catalog:product_create' %}">Добавить продукт</a>
+    {% endif %}
 </div>
-
-<div class="row">
-    {% for product in page_obj %}
-    <div class="col-3">
-        <div class="card" style="width: 18rem;">
-            <img src="{{ product.image_preview|get_image_path:'/static/apology.webp' }}" class="card-img-top"
-                 alt="product" width="200" height=200>
-            <div class="card-body">
-                <h5 class="card-title">{{ product.name }}</h5>
-                <p class="card-text">{{ product.description|slice:":100" }}...</p>
-                <div class="row">
-                    <div class="col-auto">
-                        <a href="{% url 'catalog:product_detail' product.pk %}" class="btn btn-primary">Подробнее...</a>
-                    </div>
-                    <div class="col-auto center">
-                        <p class="text-dark-end m-1">{{ product.price|floatformat:"2g" }} руб.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="row text-center">
+        {% for object in object_list %}
+        {% include 'catalog/includes/inc_product.html' %}
+        {% endfor %}
     </div>
-    {% endfor %}
 </div>
 {% endblock %}

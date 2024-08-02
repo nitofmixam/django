@@ -219,7 +219,7 @@
     "model": "auth.permission",
     "pk": 25,
     "fields": {
-      "name": "Can add пробукт",
+      "name": "Can add продукт",
       "content_type": 8,
       "codename": "add_product"
     }
@@ -228,7 +228,7 @@
     "model": "auth.permission",
     "pk": 26,
     "fields": {
-      "name": "Can change пробукт",
+      "name": "Can change продукт",
       "content_type": 8,
       "codename": "change_product"
     }

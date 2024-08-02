@@ -1,43 +1,53 @@
 {% extends 'catalog/base.html' %}
 
-{% block context %}
-<div class="col-12">
-    {% if object %}
-    <form action="{% url 'catalog:product_update' object.pk %}" class="row" method="post" enctype="multipart/form-data">
-        {% else %}
-        <form action="{% url 'catalog:product_create' %}" class="row" method="post" enctype="multipart/form-data">
-            {% endif %}
-            <div class="col-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            Редактирование продукта
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        {% csrf_token %}
-                        {{ form.as_p }}
-                        <button type="submit" class="btn btn-primary">Сохранить</button>
-                    </div>
+{% block content %}
+<div class="container">
+    <form method="post" class="row" enctype="multipart/form-data">
+        <div class="col-6">
+            <div class="card">
+                <div class="card-header">
+                    {% if object %}
+                    Редактирование продукта
+                    {% else %}
+                    Добавление продукта
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-outline-success">
+                        {% if object %}
+                        Сохранить
+                        {% else %}
+                        Добавить
+                        {% endif %}
+                    </button>
+
                 </div>
             </div>
-            <div class="col-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            Редактирование версии
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        {{ formset.management_form }}
-                        {% for f in formset.forms %}
-                        {{ f.as_p }}
-                        {% endfor %}
-                    </div>
+        </div>
+        {% if object %}
+        <div class="col-6">
+            <div class="card">
+                <div class="card-header">
+                    Внести версию продукта
+                </div>
+                <div class="card-body">
+                    {{ formset.management_form }}
+                    {% for form in formset.forms %}
+                    {{ form.as_p }}
+                    {% if not forloop.last %}
+                    <hr>
+                    {% endif %}
+                    {% endfor %}
+                    <button type="submit" class="btn btn-outline-success">
+                        Сохранить
+                    </button>
+
                 </div>
             </div>
-        </form>
+        </div>
+        {% endif %}
+    </form>
 </div>
-
-
 {% endblock %}
