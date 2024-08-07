@@ -1,20 +1,17 @@
+from django.conf import settings
 from django.core.cache import cache
 
-from catalog.models import Product
-from config.settings import CACHE_ENABLED
+from catalog.models import Category
 
 
-def get_category_from_cache():
-    """
-    Возвращает список продуктов из кэша или из базы,
-    если кэш не включен.
-    """
-    if not CACHE_ENABLED:  # если кэш не включен
-        return Product.objects.all()  # возвращаем список продуктов
-    key = 'category_list'  # ключ
-    product = cache.get(key)  # получаем кэш по ключу
-    if product is not None:  # если кэш не пустой
-        return product  # возвращаем кэш
-    product = Product.objects.all()  # получаем список продуктов из базы
-    cache.set(key, product)  # кладем список продуктов в кэш
-    return product
+def get_categories_from_cache():
+    if settings.CACHE_ENABLED:
+        key = 'categories_list'
+        categories_list = cache.get(key)
+        if categories_list is None:
+            categories_list = Category.objects.all()
+            cache.set(key, categories_list)
+    else:
+        categories_list = Category.objects.all()
+
+    return categories_list

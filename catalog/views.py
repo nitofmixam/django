@@ -3,29 +3,40 @@ from django.core.exceptions import PermissionDenied
 from django.forms import inlineformset_factory
 from django.shortcuts import render
 from django.urls import reverse_lazy, reverse
-from django.views.generic import TemplateView, ListView, View, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
 from catalog.forms import ProductForm, VersionForm, ProductModeratorForm
-from catalog.models import Product, Version
+from catalog.models import Product, Version, Category
+from catalog.services import get_categories_from_cache
 
 
-class HomeView(TemplateView):
+class HomeView(ListView):
+    model = Category
     template_name = 'catalog/home.html'
-    extra_context = {
-        'title': 'Главная',
-    }
 
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
-        context_data['object_list'] = Product.objects.all()
+        categories_list = get_categories_from_cache()
+        context_data['categories'] = categories_list
+        context_data.update({'title': 'Главная'})
         return context_data
 
 
 class ProductListView(ListView):
     model = Product
-    extra_context = {
-        'title': 'Продукты',
-    }
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.filter(category=self.kwargs.get('pk'))
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+
+        category_item = Category.objects.get(pk=self.kwargs['pk'])
+        context_data['title'] = category_item.name
+
+        return context_data
 
 
 class ProductDetailView(DetailView):
@@ -46,9 +57,6 @@ class ProductCreateView(LoginRequiredMixin, CreateView):
     form_class = ProductForm
     success_url = reverse_lazy('catalog:products')
 
-    # def get_success_url(self):
-    #     return reverse('catalog:product', args=[self.kwargs.get('pk')])
-
     def form_valid(self, form):
         self.object = form.save()
         self.object.owner = self.request.user
@@ -61,10 +69,6 @@ class ProductCreateView(LoginRequiredMixin, CreateView):
 
 class ProductUpdateView(LoginRequiredMixin, UpdateView):
     model = Product
-
-    # form_class = ProductForm
-
-    # success_url = reverse_lazy('catalog:products')
 
     def get_success_url(self):
         return reverse('catalog:product', args=[self.kwargs.get('pk')])

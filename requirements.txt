@@ -26,3 +26,5 @@ pytils~=0.4.1
 phonenumber-field
 django-phonenumbers-1.0.1
 phonenumbers-8.13.40
+
+python-dotenv~=1.0.1
