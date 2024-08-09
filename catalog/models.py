@@ -8,7 +8,7 @@ NULLABLE = {'blank': True, 'null': True}
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=150, verbose_name='Наименование')
+    name = models.CharField(max_length=150, verbose_name='Наименование', blank=True, null=True)
     description = models.TextField(**NULLABLE, verbose_name='Описание')
 
     def __str__(self):
@@ -20,7 +20,7 @@ class Category(models.Model):
 
 
 class Product(models.Model):
-    name = models.CharField(max_length=100, verbose_name='Наименование')
+    name = models.CharField(max_length=100, verbose_name='Наименование', blank=True, null=True)
     description = models.CharField(**NULLABLE, verbose_name='Описание')
     image = models.ImageField(upload_to='product/', **NULLABLE, verbose_name='Изображение (превью)')
     category = models.ForeignKey(Category, on_delete=models.CASCADE, verbose_name='Категория', blank=True, null=True)
@@ -54,7 +54,7 @@ class Product(models.Model):
 
 
 class Version(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='Продукт')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='Продукт', blank=True, null=True)
     version_number = models.CharField(max_length=50, verbose_name='Номер версии', **NULLABLE)
     version_name = models.CharField(max_length=50, verbose_name='Название версии', blank=True, null=True)
     is_active = models.BooleanField(verbose_name='Признак текущей версии', default=False)
