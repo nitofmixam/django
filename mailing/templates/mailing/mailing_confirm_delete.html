@@ -1,4 +1,4 @@
-{% extends 'catalog/base.html' %}
+{% extends 'mailing/home.html' %}
 
 {% block content %}
 <div class="container">
@@ -9,9 +9,11 @@
                     <div class="card-body">
                         <form method="post">
                             {% csrf_token %}
-                            <p>Хотите удалить продукт "{{ object.name }}"?</p>
+                            <p>Хотите удалить рассылку "{{ object.message|slice:50 }}"?</p>
+                            {% if request.user == object.user %}
                             <button type="submit" class="btn btn-danger">Подтвердить</button>
-                            <a href="{% url 'catalog:product' object.pk %}" class="btn btn-warning">Отмена</a>
+                            {% endif %}
+                            <a href="{% url 'mailing:message' object.pk %}" class="btn btn-warning">Отмена</a>
                         </form>
                     </div>
                 </div>

@@ -1,0 +1,24 @@
+{% extends 'mailing/home.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="col-12">
+        <div class="row">
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <p>Хотите удалить клиента "{{ object.first_name}} {{ object.last_name}}"?</p>
+                            {% if request.user == object.user %}
+                            <button type="submit" class="btn btn-danger">Подтвердить</button>
+                            {% enif %}
+                            <a href="{% url 'mailing:client' object.pk %}" class="btn btn-warning">Отмена</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
